@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { nanoid } from 'nanoid';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { Form, Field, Input, SubmitButton } from './Form.styled';
 
 class ContactForm extends Component {
@@ -10,26 +11,33 @@ class ContactForm extends Component {
   };
 
   onChangeInputValue = e => {
+    const { name, value } = e.currentTarget;
     this.setState({
-      [e.currentTarget.name]: e.currentTarget.value,
+      [name]: value,
     });
   };
 
   onSubmit = e => {
     const { name, number } = this.state;
+    const { onSubmit, contacts } = this.props;
+    const isExisted = contacts.find(contact => contact.name === name);
     e.preventDefault();
-    const contact = {
-      name,
-      number,
-      id: nanoid(),
-    };
-    this.props.onSubmit(contact);
     this.reset();
+    if (isExisted) {
+      return Notify.warning(`${name} is already in contacts`);
+    }
+      const contact = {
+        name,
+        number,
+        id: nanoid(),
+      };
+      onSubmit(contact);
   };
 
   reset = () => {
     this.setState({ number: '', name: '' });
   };
+
   render() {
     const { name, number } = this.state;
     return (
@@ -67,4 +75,9 @@ export default ContactForm;
 
 ContactForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
+  contacts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+    }).isRequired
+  ).isRequired,
 };
